@@ -1,5 +1,6 @@
 #include "shm_emu_io.h"
 #include <iostream>
+#include <iomanip>
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 
@@ -29,15 +30,24 @@ namespace IO {
         p->width = width;
         p->height = height;
 
-        p->data = new Pixel*[height];
+        p->data = new Pixel*[width];
         if (p->data == nullptr) {
             return nullptr;
         }
 
         for (int x=0; x<width; x++) {
-            p->data[x] = new Pixel[width];
+            p->data[x] = new Pixel[height];
             if (p->data[x] == nullptr) {
                 return nullptr;
+            }
+        }
+
+        // Black out pixel data
+        for( int x=0; x<width; x++) {
+            for (int y=0; y<height; y++) {
+                p->data[x][y].r = 0;
+                p->data[x][y].g = 0;
+                p->data[x][y].b = 0;
             }
         }
 
