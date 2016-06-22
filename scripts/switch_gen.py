@@ -1,41 +1,41 @@
 from pprint import pprint
 
 opCodes = {
-        "0NNN": "callRCA",
-        "00E0": "clearScreen",
-        "00EE": "returnSubroutine",
-        "1NNN": "jump",
-        "2NNN": "callSubroutine",
-        "3XNN": "skipEq",
-        "4XNN": "skipNeq",
-        "5XY0": "skipREq",
-        "6XNN": "setReg",
-        "7XNN": "addReg",
-        "8XY0": "movReg",
-        "8XY1": "orReg",
-        "8XY2": "andReg", 
-        "8XY3": "xorReg",  
-        "8XY4": "addFReg",
-        "8XY5": "subFReg",
-        "8XY6": "rshFReg",
-        "8XY7": "rsubFReg",
-        "8XYE": "lshFReg",
-        "9XY0": "skipRNeq",
-        "ANNN": "setIndex",
-        "BNNN": "jumpOffset",
-        "CXNN": "randAnd",
-        "DXYN": "draw",
-        "EX9E": "skipWithKey",
-        "EXA1": "skipNotKey",
-        "FX07": "getDelayTimer",
-        "FX0A": "waitForKey",
-        "FX15": "setDelayTimer",
-        "FX18": "setSoundTimer",
-        "FX1E": "addIndex",
-        "FX29": "setIndexToCh",
-        "FX33": "convertBCD",
-        "FX55": "pushRange",
-        "FX65": "popRange"
+        "0NNN": "opCallRCA",
+        "00E0": "opClearScreen",
+        "00EE": "opReturnSubroutine",
+        "1NNN": "opJump",
+        "2NNN": "opCallSubroutine",
+        "3XNN": "opSkipEq",
+        "4XNN": "opSkipNeq",
+        "5XY0": "opSkipREq",
+        "6XNN": "opMovConstant",
+        "7XNN": "opAddConstant",
+        "8XY0": "opMov",
+        "8XY1": "opOr",
+        "8XY2": "opAnd", 
+        "8XY3": "opXor",  
+        "8XY4": "opAdd",
+        "8XY5": "opSub",
+        "8XY6": "opRShift",
+        "8XY7": "opRSub",
+        "8XYE": "opLShift",
+        "9XY0": "opSkipRNeq",
+        "ANNN": "opSetIndex",
+        "BNNN": "opJumpOffset",
+        "CXNN": "opRandAnd",
+        "DXYN": "opDraw",
+        "EX9E": "opSkipWhenKeyDown",
+        "EXA1": "opSkipWhenKeyUp",
+        "FX07": "opGetDelayTimer",
+        "FX0A": "opWaitForKeyPress",
+        "FX15": "opSetDelayTimer",
+        "FX18": "opGetSoundTimer",
+        "FX1E": "opAddToIndex",
+        "FX29": "opSetIndexToCh",
+        "FX33": "opConvertToBCD",
+        "FX55": "opPushRange",
+        "FX65": "opPopRange"
 }
 
 branches = set("0123456789ABCDEF")
@@ -57,12 +57,12 @@ for match, opName in opCodes.items():
 
 def getSwitch(tree, tabdepth=0, opCodeDigit=0):
     out = ""
+    tabs = '\t'*tabdepth
     if isinstance(tree, basestring):
-        out += '\t'*tabdepth + tree + "();\n"
+        out += tabs + tree + "();\n"
     elif len(tree) == 1:
         out += getSwitch( tree[tree.keys()[0]], tabdepth, opCodeDigit+1 )
     else:
-        tabs = '\t'*tabdepth
         out += tabs + "select (opCode.digit%s) {\n" % opCodeDigit
 
         for value, nest in sorted( tree.items() ):
@@ -76,6 +76,8 @@ def getSwitch(tree, tabdepth=0, opCodeDigit=0):
         out += tabs + "default:\n"
         if 'X' in tree.keys():
             out += getSwitch( tree['X'], tabdepth+1, opCodeDigit+1 )
+        else:
+            out += tabs + "opUnknown();"
         out += tabs + "\tbreak;\n"
 
         out += tabs + "}\n"

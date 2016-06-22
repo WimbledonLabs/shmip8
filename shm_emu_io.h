@@ -19,6 +19,9 @@ namespace IO {
     PixelMatrix* createPixelMatrix(uint16 width, uint16 height);
     void destoryPixelMatrix(PixelMatrix *pixelData);
 
+    void delay( uint32_t ms );
+    uint8 random();
+
     uint8 initializeDisplay(PixelMatrix*, uint8 scale);
 
     uint8 initializeInput(Keyboard*);

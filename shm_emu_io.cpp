@@ -1,5 +1,6 @@
 #include "shm_emu_io.h"
 #include <iostream>
+#include <stdlib.h>
 #include <SDL2/SDL.h>
 
 namespace IO {
@@ -11,8 +12,16 @@ namespace IO {
     Keyboard *keysPressed = nullptr;
     PixelMatrix *pixels = nullptr;
 
+    void delay( Uint32 ms) {
+        SDL_Delay(ms);
+    }
+
+    uint8 random() {
+        return rand();
+    }
+
     PixelMatrix* createPixelMatrix(uint16 width, uint16 height) {
-        PixelMatrix *p = (PixelMatrix*) malloc(sizeof(PixelMatrix));
+        PixelMatrix *p = new PixelMatrix;
         if (p == nullptr) {
             return nullptr;
         }
@@ -20,13 +29,13 @@ namespace IO {
         p->width = width;
         p->height = height;
 
-        p->data = (Pixel**) malloc(sizeof(Pixel*)*height);
+        p->data = new Pixel*[height];
         if (p->data == nullptr) {
             return nullptr;
         }
 
         for (int x=0; x<width; x++) {
-            p->data[x] = (Pixel*) malloc(sizeof(Pixel)*width);
+            p->data[x] = new Pixel[width];
             if (p->data[x] == nullptr) {
                 return nullptr;
             }
@@ -37,11 +46,11 @@ namespace IO {
 
     void destoryPixelMatrix(PixelMatrix *pixelData) {
         for (int x=0; x < pixelData->width; x++) {
-            free(pixelData->data[x]);
+            delete[] pixelData->data[x];
         }
 
-        free(pixelData->data);
-        free(pixelData);
+        delete[] pixelData->data;
+        delete pixelData;
     }
 
     uint8 initializeDisplay(PixelMatrix *pixelData, uint8 scale) {
@@ -108,7 +117,8 @@ namespace IO {
             }
             rect.x += screenScale;
         }
-        return;
+
+        SDL_RenderPresent(ren);
     }
 
     uint16 fetch(uint16 pc) {
