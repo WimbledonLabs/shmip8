@@ -18,7 +18,7 @@
 #define FONT_OFFSET 0
 #define FONT_HEIGHT 5
 
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 
 //===========Global Variables==================================================
 
@@ -42,7 +42,7 @@ OpCode opCode;
 uint8 waitingForInput = 0;
 uint8 waitingInputReg;
 
-uint8 updateScreen = 0;
+uint8 updateScreen = 1;
 
 Keyboard keyboard;
 
@@ -185,10 +185,12 @@ int main(int argc, char** argv) {
                 soundTimer--;
         }
         IO::updateInput();
+        //printKeyboard();
         if (waitingForInput && keyboard.keys) {
             for (int i=0; i<0xF; i++) {
                 if (keyboard.keys & 0x1 << i) {
                     reg[waitingInputReg] = i;
+                    waitingForInput = 0;
                     break;
                 }
 
@@ -214,7 +216,6 @@ int main(int argc, char** argv) {
             IO::updateScreen();
             updateScreen = 0;
         }
-
         // Execute 1000 instructions per second
         frameCount++;
         IO::delay(1);//SDL_Delay( 1 );
@@ -397,7 +398,7 @@ void opAdd(OpCode op) {
 void opSub(OpCode op) {
     // 8XY5
     // VX = VX - VY, set F register to NOT(borrow bit)
-    if (reg[op.vX] > reg[op.vY]) {
+    if (reg[op.vX] >= reg[op.vY]) {
         reg[0xF] = 1;
     } else {
         reg[0xF] = 0;
@@ -413,14 +414,14 @@ void opSub(OpCode op) {
 void opRShift(OpCode op) {
     // 8XY6
     // Set VX to VX right shifted by 1, set F register to LSB
-    reg[0xF] = reg[op.vX] & 0xF;
+    reg[0xF] = reg[op.vX] & 0x1;
     reg[op.vX] >>= 1;
 }
 
 void opRSub(OpCode op) {
     // 8XY7
     // Set VX to VY minus VX, set F register to borrow bit
-    if (reg[op.vY] > reg[op.vX]) {
+    if (reg[op.vY] >= reg[op.vX]) {
         reg[0xF] = 1;
     } else {
         reg[0xF] = 0;
@@ -513,7 +514,7 @@ void opSkipWhenKeyDown(OpCode op) {
         std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
         std::cout << "SKP V" << std::hex << (int) op.vX << std::endl;
     #endif
-    if ( (0x8000 >> op.vX) & keyboard.keys) {
+    if ( (0x8000 >> reg[op.vX]) & keyboard.keys) {
         pc += 2;
     }
 }
@@ -524,7 +525,7 @@ void opSkipWhenKeyUp(OpCode op) {
         std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
         std::cout << "SKNP V" << std::hex << (int) op.vX << std::endl;
     #endif
-    if (!((0x8000 >> op.vX) & keyboard.keys)) {
+    if (!((0x8000 >> reg[op.vX]) & keyboard.keys)) {
         pc += 2;
     }
 }
@@ -539,6 +540,7 @@ void opWaitForKeyPress(OpCode op) {
     // FX0A
     // Pause execution until a key press is received
     waitingForInput = 1;
+    waitingInputReg = op.vX;
 }
 
 void opSetDelayTimer(OpCode op) {

@@ -109,13 +109,13 @@ namespace IO {
 
     void updateKey(SDL_Keycode keyCode, uint8 state) {
         switch (keyCode) {
-        case SDLK_1:
+        case SDLK_a:
             keysPressed->k0 = state;
             break;
-        case SDLK_2:
+        case SDLK_1:
             keysPressed->k1 = state;
             break;
-        case SDLK_3:
+        case SDLK_s:
             keysPressed->k2 = state;
             break;
         case SDLK_4:
@@ -133,10 +133,10 @@ namespace IO {
         case SDLK_r:
             keysPressed->k7 = state;
             break;
-        case SDLK_a:
+        case SDLK_2:
             keysPressed->k8 = state;
             break;
-        case SDLK_s:
+        case SDLK_3:
             keysPressed->k9 = state;
             break;
         case SDLK_d:
