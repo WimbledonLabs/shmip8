@@ -2,6 +2,8 @@
 #include <iomanip>   // std::setw
 #include <fstream>   // std::ifstream
 
+#include <bitset>
+
 #include "main.h"
 #include "shm_emu_io.h"
 
@@ -15,6 +17,8 @@
 
 #define FONT_OFFSET 0
 #define FONT_HEIGHT 5
+
+#define DEBUG_MODE 0
 
 //===========Global Variables==================================================
 
@@ -117,6 +121,10 @@ uint16 fetch(uint16 programCounter) {
     return ram[programCounter] << 8 | ram[programCounter+1];
 }
 
+void printOp(OpCode op) {
+    std::cout << std::setw(4) << std::hex << pc << ": " << std::setw(4) << std::hex << op.value << std::endl;
+}
+
 void printStatus() {
     std::cout << "Current Instruction: 0x" << std::hex << fetch(pc) << std::endl;
 
@@ -148,6 +156,11 @@ void printStatus() {
     }
 }
 
+void printKeyboard() {
+    std::bitset<16> x(keyboard.keys);
+    std::cout<< x << std::endl;
+}
+
 int main(int argc, char** argv) {
     int frameCount = 0;
     if (argc <= 1) {
@@ -162,9 +175,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    printStatus();
-
     while (1) {
+        //printStatus();
         // TODO update timers
         if (frameCount % 17 == 0) {
             if (delayTimer)
@@ -184,12 +196,21 @@ int main(int argc, char** argv) {
             }
         } else {
             opCode.value = fetch(pc);
+            //printOp(opCode);
             pc += 2;
+            if (!opCode.value) {
+                // TODO panic better
+                std::cout << "All Zeros in op code" << std::endl;
+                return 1;
+            }
+#if DEBUG_MODE == 2
+            std::cout << std::setw(3) << std::hex << pc - 2 << ": " << 
+                std::hex << opCode.value << std::endl;
+#endif
             execute(opCode);
         }
 
         if (updateScreen) {
-            std::cout << "!!!! UPDATED SCREEN !!!!" << std::endl;
             IO::updateScreen();
             updateScreen = 0;
         }
@@ -223,18 +244,30 @@ void opClearScreen(OpCode op) {
 void opReturnSubroutine(OpCode op) {
     // 00EE
     // Returns from a subroutine
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "RET" << std::endl;
+    #endif
     pc = stack[sp--];
 }
 
 void opJump(OpCode op) {
     // 1NNN
     // Jumps to address NNN
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "JP  " << std::hex << (int) op.nNN << std::endl;
+    #endif
     pc = op.nNN;
 }
 
 void opCallSubroutine(OpCode op) {
     // 2NNN
     // Puts the current pc at the top of the stack, then calls subroutine at NNN
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "CALL " << std::hex << (int) op.nNN << std::endl;
+    #endif
     stack[++sp] = pc;
     pc = op.nNN;
 }
@@ -242,6 +275,11 @@ void opCallSubroutine(OpCode op) {
 void opSkipEq(OpCode op) {
     // 3XNN
     // Skip next instruction if vX equals NN
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "SE  V" << std::hex << (int) op.vX <<
+                        ", " << std::hex << (int) op.nN << std::endl;
+    #endif
     if (reg[op.vX] == op.nN) {
         pc += 2;
     }
@@ -250,6 +288,11 @@ void opSkipEq(OpCode op) {
 void opSkipNeq(OpCode op) {
     // 4XNN
     // Skips the next instruction if vX does not equal NN
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "SNE V" << std::hex << (int) op.vX <<
+                        ", " << std::hex << (int) op.nN << std::endl;
+    #endif
     if (reg[op.vX] != op.nN) {
         pc += 2;
     }
@@ -258,6 +301,11 @@ void opSkipNeq(OpCode op) {
 void opSkipREq(OpCode op) {
     // 5XY0
     // Skips the next instruction if vX equals vY
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "SE  V" << std::hex << (int) op.vX <<
+                       ", V" << std::hex << (int) op.vY << std::endl;
+    #endif
     if (reg[op.vX] == reg[op.vY]) {
         pc += 2;
     }
@@ -267,42 +315,71 @@ void opMovConstant(OpCode op) {
     // 6XNN
     // Set VX to NN
     reg[op.vX] = op.nN;
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "LD  V" << std::hex << (int) op.vX << ", " << std::dec << op.nN << std::endl;
+    #endif
 }
 
 void opAddConstant(OpCode op) {
     // 7XNN
     // Add NN to VX
     reg[op.vX] += op.nN;
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "ADD V" << std::hex << (int) op.vX <<
+                        ", " << op.nN << std::endl;
+    #endif
 }
 
 void opMov(OpCode op) {
     // 8XY0
     // Set VX to VY
     reg[op.vX] = reg[op.vY];
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "LD  V" << std::hex << (int) op.vX <<
+                       ", V" << std::hex << (int) op.vY << std::endl;
+    #endif
 }
 
 void opOr(OpCode op) {
     // 8XY1
     // Set VX to VX or VY
     reg[op.vX] |= reg[op.vY];
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "OR  V" << std::hex << (int) op.vX <<
+                       ", V" << std::hex << (int) op.vY << std::endl;
+    #endif
 }
 
 void opAnd(OpCode op) {
     // 8XY2
     // Set VX to VX and VY
     reg[op.vX] &= reg[op.vY];
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "AND V" << std::hex << (int) op.vX <<
+                       ", V" << std::hex << (int) op.vY << std::endl;
+    #endif
 }
 
 void opXor(OpCode op) {
     // 8XY3
     // Set VX to VX xor VY
     reg[op.vX] ^= reg[op.vY];
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "XOR V" << std::hex << (int) op.vX <<
+                       ", V" << std::hex << (int) op.vY << std::endl;
+    #endif
 }
 
 void opAdd(OpCode op) {
     // 0x8XY4
     // Set VX to VX plus VY, set F register to carry bit
-    uint16 sum = reg[op.vX] + reg[op.vX];
+    uint16 sum = reg[op.vX] + reg[op.vY];
     reg[op.vX] = sum;
 
     if (sum > 0xFF) {
@@ -310,6 +387,11 @@ void opAdd(OpCode op) {
     } else {
         reg[0xF] = 0;
     }
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "ADD V" << std::hex << (int) op.vX <<
+                       ", V" << std::hex << (int) op.vY << std::endl;
+    #endif
 }
 
 void opSub(OpCode op) {
@@ -321,6 +403,11 @@ void opSub(OpCode op) {
         reg[0xF] = 0;
     }
     reg[op.vX] -= reg[op.vY];
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "SUB V" << std::hex << (int) op.vX <<
+                       ", V" << std::hex << (int) op.vY << std::endl;
+    #endif
 }
 
 void opRShift(OpCode op) {
@@ -351,6 +438,11 @@ void opLShift(OpCode op) {
 void opSkipRNeq(OpCode op) {
     // 9XY0
     // Skips the next instruction if vX does not equal vY
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "SNE V" << std::hex << (int) op.vX <<
+                       ", V" << std::hex << (int) op.vY << std::endl;
+    #endif
     if (reg[op.vX] != reg[op.vY]) {
         pc += 2;
     }
@@ -360,6 +452,10 @@ void opSetIndex(OpCode op) {
     // ANNN
     // Set the index address to NNN
     iAddress = op.nNN;
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "LD  I, " << std::hex << (int) op.nNN << std::endl;
+    #endif
 }
 
 void opJumpOffset(OpCode op) {
@@ -372,6 +468,11 @@ void opRandAnd(OpCode op) {
     // CXNN
     // Set VX to a random number masked by NN
     reg[op.vX] = IO::random() & op.nN;
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "RNG V" << std::hex << (int) op.vX <<
+                        ", " << std::hex << (int) op.nN << std::endl;
+    #endif
 }
 
 void opDraw(OpCode op) {
@@ -398,15 +499,31 @@ void opDraw(OpCode op) {
         }
     }
     updateScreen = 1;
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "DRW V" << std::hex << (int) op.vX <<
+                       ", V" << std::hex << (int) op.vY << 
+                       ", "  << std::dec << (int) op.n  << std::endl;
+    #endif
 }
 
 void opSkipWhenKeyDown(OpCode op) {
+    //std::cout << "Key: " << (int) op.vX << std::endl;
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "SKP V" << std::hex << (int) op.vX << std::endl;
+    #endif
     if ( (0x8000 >> op.vX) & keyboard.keys) {
         pc += 2;
     }
 }
 
 void opSkipWhenKeyUp(OpCode op) {
+    //std::cout << "Key: " << (int) op.vX << std::endl;
+    #if DEBUG_MODE == 1
+        std::cout << std::setw(3) << std::hex << pc - 2 << ": ";
+        std::cout << "SKNP V" << std::hex << (int) op.vX << std::endl;
+    #endif
     if (!((0x8000 >> op.vX) & keyboard.keys)) {
         pc += 2;
     }
@@ -421,6 +538,7 @@ void opGetDelayTimer(OpCode op) {
 void opWaitForKeyPress(OpCode op) {
     // FX0A
     // Pause execution until a key press is received
+    waitingForInput = 1;
 }
 
 void opSetDelayTimer(OpCode op) {
@@ -445,7 +563,7 @@ void opSetIndexToCh(OpCode op) {
     // FX29
     // Sets address I to the location where the sprite for the character for the
     // value in vX is stored
-    iAddress = ram[op.vX*FONT_HEIGHT + FONT_OFFSET];
+    iAddress = reg[op.vX]*FONT_HEIGHT + FONT_OFFSET;
 }
 
 void opConvertToBCD(OpCode op) {
@@ -461,7 +579,7 @@ void opPushRange(OpCode op) {
     // FX55
     // Stores v0 to vX (inclusive) in memory starting at address I
     for (int j=0; j <= op.vX; j++) {
-        ram[iAddress+j] = reg[j];
+        ram[iAddress++] = reg[j];
     }
 }
 
@@ -469,7 +587,7 @@ void opPopRange(OpCode op) {
     // FX65
     // Inserts values from memory starting at address I into registers v0 to vX
     for (int j=0; j <= op.vX; j++) {
-        reg[j] = ram[iAddress+j];
+        reg[j] = ram[iAddress++];
     }
 }
 

@@ -107,7 +107,84 @@ namespace IO {
         return 1;
     }
 
+    void updateKey(SDL_Keycode keyCode, uint8 state) {
+        switch (keyCode) {
+        case SDLK_1:
+            keysPressed->k0 = state;
+            break;
+        case SDLK_2:
+            keysPressed->k1 = state;
+            break;
+        case SDLK_3:
+            keysPressed->k2 = state;
+            break;
+        case SDLK_4:
+            keysPressed->k3 = state;
+            break;
+        case SDLK_q:
+            keysPressed->k4 = state;
+            break;
+        case SDLK_w:
+            keysPressed->k5 = state;
+            break;
+        case SDLK_e:
+            keysPressed->k6 = state;
+            break;
+        case SDLK_r:
+            keysPressed->k7 = state;
+            break;
+        case SDLK_a:
+            keysPressed->k8 = state;
+            break;
+        case SDLK_s:
+            keysPressed->k9 = state;
+            break;
+        case SDLK_d:
+            keysPressed->kA = state;
+            break;
+        case SDLK_f:
+            keysPressed->kB = state;
+            break;
+        case SDLK_z:
+            keysPressed->kC = state;
+            break;
+        case SDLK_x:
+            keysPressed->kD = state;
+            break;
+        case SDLK_c:
+            keysPressed->kE = state;
+            break;
+        case SDLK_v:
+            keysPressed->kF = state;
+            break;
+        default:
+            break;
+        }
+    }
+
     void updateInput() {
+        SDL_Event test_event;
+
+        while (SDL_PollEvent(&test_event)) {
+            switch (test_event.type) {
+            case SDL_KEYDOWN:
+                updateKey(test_event.key.keysym.sym, 1);
+                break;
+            case SDL_KEYUP:
+                updateKey(test_event.key.keysym.sym, 0);
+                break;
+            case SDL_QUIT:
+                int ra;
+                int rb;
+                int rDed;
+                ra = 13;
+                rb = ra - ra;
+                rDed = ra / rb;
+            default:
+                //std::cout << "Unhandled event: " << test_event.type << std::endl;
+                break;
+            }
+        }
         return;
     }
 
