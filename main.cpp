@@ -18,7 +18,7 @@
 #define FONT_OFFSET 0
 #define FONT_HEIGHT 5
 
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 
 //===========Global Variables==================================================
 
