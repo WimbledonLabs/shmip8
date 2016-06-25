@@ -20,8 +20,10 @@
 
 #clean:
 #	rm *.o && rm $(EXE)
-all: main.cpp shm_emu_io.cpp
-	g++ main.cpp shm_emu_io.cpp -std=c++11 -L/usr/local/lib -lSDL2 -Wl,-rpath=/usr/local/lib -o shmip
+all: main.cpp shmip8_core.cpp shm_emu_io.cpp
+	python scripts/populateSwitch.py shmip8_core.cpp temp_shmip8_core.cpp
+	g++ main.cpp temp_shmip8_core.cpp shm_emu_io.cpp -std=c++11 -L/usr/local/lib -lSDL2 -Wl,-rpath=/usr/local/lib -o shmip
 
-test: test.cpp shm_emu_io.cpp
+test: test.cpp shmip8_core.py shm_emu_io.cpp
+	python scripts/populateSwitch.py shmip8_core.cpp temp_shmip8_core.py
 	g++ test.cpp shm_emu_io.cpp -std=c++11 -L/usr/local/lib -lSDL2 -Wl,-rpath=/usr/local/lib -o test

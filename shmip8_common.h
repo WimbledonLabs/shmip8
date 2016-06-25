@@ -4,6 +4,7 @@
 
 typedef uint8_t uint8;
 typedef uint16_t uint16;
+typedef uint32_t uint32;
 
 typedef union{
     uint16 keys = 0;
@@ -25,7 +26,6 @@ typedef union{
         unsigned int k1: 1;
         unsigned int k0: 1;
     };
-} Keyboard;
-
+} HexKeyboardStatus;
 
 #endif // SHMIP8_COMMON_H

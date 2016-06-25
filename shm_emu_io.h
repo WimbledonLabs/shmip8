@@ -2,38 +2,29 @@
 #define SHM_EMU_IO
 
 #include "shmip8_common.h"
+#include <SDL2/SDL.h>
 
 namespace IO {
-    typedef union {
-        uint32_t data = 0;
-        struct {
-            uint8 r;
-            uint8 g;
-            uint8 b;
-            uint8 a;
-        };
-    } Pixel;
+    void initialize();
+ 
+    class InputAdapter {
+    private:
+        virtual void updateAdapter(SDL_Keycode, uint8);
+    public:
+        void getUpdates();
+    };
 
-    typedef struct {
-        Pixel** data;
-        uint16 width;
-        uint16 height;
-    } PixelMatrix;
+    class Screen {
+    public:
+        Screen(uint32 width, uint32 height, float scale);
+        ~Screen();
+        void updateScreen(uint32* data);
+    private:
+        SDL_Window *m_win = nullptr;
+        SDL_Renderer *m_ren = nullptr;
+        SDL_Texture *m_tex = nullptr;
+    };
 
-    PixelMatrix* createPixelMatrix(uint16 width, uint16 height);
-    void destoryPixelMatrix(PixelMatrix *pixelData);
-
-    void delay( uint32_t ms );
-    uint8 random();
-
-    uint8 initializeDisplay(PixelMatrix*, uint8 scale);
-
-    uint8 initializeInput(Keyboard*);
-    uint8 loadROM(char*);
-
-    void updateInput();
-    void updateScreen();
-    uint16 fetch(uint16);
 }
 
 #endif // SHM_EMU_IO
