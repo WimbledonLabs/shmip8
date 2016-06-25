@@ -7,8 +7,7 @@
 namespace IO {
     SDL_Window *win = nullptr;
     SDL_Renderer *ren = nullptr;
-
-    uint8 screenScale = 1;
+    SDL_Texture *tex = nullptr;
 
     Keyboard *keysPressed = nullptr;
     PixelMatrix *pixels = nullptr;
@@ -65,17 +64,17 @@ namespace IO {
 
     uint8 initializeDisplay(PixelMatrix *pixelData, uint8 scale) {
         pixels = pixelData;
-        screenScale = scale;
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
             std::cout << "Failed to initialize video: " << SDL_GetError() << 
                          std::endl;
-     
+
             return 1;
         }
 
+        // Create a window to draw in
         win = SDL_CreateWindow("Hello World!", SDL_WINDOWPOS_UNDEFINED, 
                                SDL_WINDOWPOS_UNDEFINED, pixels->width * scale,
-                               pixels->height * scale, SDL_WINDOW_SHOWN);
+                               pixels->height * scale, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 
         if (win == nullptr) {
             std::cout << "Could not create window: " << SDL_GetError() << 
@@ -84,6 +83,7 @@ namespace IO {
             return 1;
         }
 
+        // Create the rendering context associated with the window
         ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | 
                                           SDL_RENDERER_PRESENTVSYNC);
 
@@ -93,6 +93,23 @@ namespace IO {
             SDL_Quit();
             return 1;
         }
+
+        // Black out the screen
+        SDL_SetRenderDrawColor(ren, 0, 0, 0, 0x00);
+        SDL_RenderClear(ren);
+
+        // make the scaled rendering look smoother.
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear"); 
+
+        // Set the size of the rendered image in pixels, which will be scaled to
+        // fit the window
+        SDL_RenderSetLogicalSize(ren, pixels->width, pixels->height);
+
+        // Create a texture to hold the pixel data while rendering
+        tex = SDL_CreateTexture(ren,
+                               SDL_PIXELFORMAT_ARGB8888,
+                               SDL_TEXTUREACCESS_STREAMING,
+                               pixels->width, pixels->height);
 
         return 0;
     }
@@ -174,12 +191,8 @@ namespace IO {
                 updateKey(test_event.key.keysym.sym, 0);
                 break;
             case SDL_QUIT:
-                int ra;
-                int rb;
-                int rDed;
-                ra = 13;
-                rb = ra - ra;
-                rDed = ra / rb;
+                exit(0);
+                break;
             default:
                 //std::cout << "Unhandled event: " << test_event.type << std::endl;
                 break;
@@ -189,20 +202,28 @@ namespace IO {
     }
 
     void updateScreen() {
+        SDL_SetRenderDrawColor(ren, 0, 0, 0, 0x00);
         SDL_RenderClear(ren);
-        SDL_Rect rect;
-        rect.w = screenScale;
-        rect.h = screenScale;
-        rect.x = 0;
-        for (int x=0; x < pixels->width; x++) {
-            rect.y = 0;
-            for (int y=0; y < pixels->height; y++) {
-                Pixel p = pixels->data[x][y];
-                SDL_SetRenderDrawColor(ren, p.r, p.g, p.b, 0xFF);
-                SDL_RenderFillRect(ren, &rect);
-                rect.y += screenScale;
+        SDL_Point p;
+
+        /* TODO add support for proper pixel buffer copying
+         * ===================================================
+        int w, h;
+        SDL_QueryTexture(tex, NULL, NULL, &w, &h);
+
+        const void *pix = pixels->data;
+        SDL_UpdateTexture(tex, NULL, pix, w * sizeof (Uint32));
+        SDL_RenderClear(ren);
+        SDL_RenderCopy(ren, tex, NULL, NULL);
+        SDL_RenderPresent(ren);
+         */
+
+        for (p.x=0; p.x < pixels->width; p.x++) {
+            for (p.y=0; p.y < pixels->height; p.y++) {
+                Pixel pixel = pixels->data[p.x][p.y];
+                SDL_SetRenderDrawColor(ren, pixel.r, pixel.g, pixel.b, 0xFF);
+                SDL_RenderDrawPoint(ren, p.x, p.y);
             }
-            rect.x += screenScale;
         }
 
         SDL_RenderPresent(ren);

@@ -18,7 +18,7 @@
 #define FONT_OFFSET 0
 #define FONT_HEIGHT 5
 
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 
 //===========Global Variables==================================================
 
@@ -176,16 +176,18 @@ int main(int argc, char** argv) {
     }
 
     while (1) {
-        //printStatus();
-        // TODO update timers
         if (frameCount % 17 == 0) {
+            if (updateScreen) {
+                IO::updateScreen();
+                updateScreen = 0;
+            }
             if (delayTimer)
                 delayTimer--;
             if (soundTimer)
                 soundTimer--;
         }
+
         IO::updateInput();
-        //printKeyboard();
         if (waitingForInput && keyboard.keys) {
             for (int i=0; i<0xF; i++) {
                 if (keyboard.keys & 0x1 << i) {
@@ -198,13 +200,13 @@ int main(int argc, char** argv) {
             }
         } else {
             opCode.value = fetch(pc);
-            //printOp(opCode);
             pc += 2;
             if (!opCode.value) {
                 // TODO panic better
                 std::cout << "All Zeros in op code" << std::endl;
                 return 1;
             }
+
 #if DEBUG_MODE == 2
             std::cout << std::setw(3) << std::hex << pc - 2 << ": " << 
                 std::hex << opCode.value << std::endl;
@@ -212,13 +214,11 @@ int main(int argc, char** argv) {
             execute(opCode);
         }
 
-        if (updateScreen) {
-            IO::updateScreen();
-            updateScreen = 0;
-        }
         // Execute 1000 instructions per second
+        // Artificial limit for games which assume
+        // some sort of limit on IPS
+        IO::delay(1); // Delay 1 ms
         frameCount++;
-        IO::delay(1);//SDL_Delay( 1 );
     }
 
     return 0;

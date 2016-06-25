@@ -4,10 +4,14 @@
 #include "shmip8_common.h"
 
 namespace IO {
-    typedef struct {
-        uint8 r = 0;
-        uint8 g = 0;
-        uint8 b = 0;
+    typedef union {
+        uint32_t data = 0;
+        struct {
+            uint8 r;
+            uint8 g;
+            uint8 b;
+            uint8 a;
+        };
     } Pixel;
 
     typedef struct {
