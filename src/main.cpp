@@ -73,6 +73,8 @@ class HexKeyboardAdapter : IO::InputAdapter {
         }
 
     public:
+        HexKeyboardAdapter() {}
+        ~HexKeyboardAdapter() {}
         HexKeyboardStatus getStatus() {
             getUpdates();
             return status;
@@ -103,6 +105,10 @@ int main(int argc, char** argv) {
     }
 
     core.loadROM(&romFile);
+
+    /*for (int i=0x200; i<0x200+256; i+=2) {
+        std::cout << std::hex << i << ": "<< std::setw(2) << std::hex << (int) core.ram[i] << std::setw(2) << std::hex << (int) core.ram[i+1] << std::endl;
+    }*/
 
     uint32 timeSinceLastUpdate = SDL_GetTicks();
     double tickCounter = 0;

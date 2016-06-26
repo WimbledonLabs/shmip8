@@ -33,7 +33,7 @@ opCodes = {
             "*x = *y - *x;", "RSUB V${vX}, V${vY}"),
     "8XYE": ("reg[0xF] = *x >> 7; *x <<= 1;", "LSH ${vX}"),
     "9XY0": ("if(*x != *y) pc += 2;", "SNE V${vX}, V${vY}"),
-    "ANNN": ("I = op.nNN;", "MOV I, V${nNN}"),
+    "ANNN": ("I = op.nNN;", "MOV I, ${nNN}"),
     "BNNN": ("pc = reg[0] + op.nNN;", "B V${vX}, ${nNN}"),
     "CXNN": ("*x = rand() & op.nN;", "RAND V${vX}, ${nN}"),
     "DXYN": ("opDraw(op);", "DRW V${vX}, V${vY}, ${nN}"),

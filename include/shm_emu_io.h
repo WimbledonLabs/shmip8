@@ -5,13 +5,14 @@
 #include <SDL2/SDL.h>
 
 namespace IO {
-    void initialize();
+    void initialize(void);
  
     class InputAdapter {
-    private:
-        virtual void updateAdapter(SDL_Keycode, uint8);
     public:
-        void getUpdates();
+        InputAdapter();
+        ~InputAdapter();
+        void updateAdapter(SDL_Keycode, uint8);
+        void getUpdates(void);
     };
 
     class Screen {

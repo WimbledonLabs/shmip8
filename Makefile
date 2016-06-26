@@ -1,29 +1,34 @@
-#CXX = g++
-#SDL_LIB = -L/usr/local/lib -lSDL2 -Wl,-rpath=/usr/local/lib
-#SDL_INCLUDE = -I/usr/local/include
+CC := g++ # This is the main compiler
+# CC := clang --analyze # and comment out the linker last line for sanity
+SRCDIR := src
+BUILDDIR := build
+TARGET := bin/shmip
+ 
+SRCEXT := cpp
+SOURCES := $(shell find $(SRCDIR) -type f -name "*.$(SRCEXT)")
+OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
+CFLAGS := -g -std=c++11 # -Wall
+LIB := -L lib -lSDL2
+INC := -I include
 
-#CXXFLAGS = -Wall -c -std=c++11 $(SDL_INCLUDE)
-#LDFLAGS = $(SDL_LIB)
+$(TARGET): $(OBJECTS)
+	@echo " Linking..."
+	@echo " $(CC) $^ -o $(TARGET) $(LIB)"; $(CC) $^ -o $(TARGET) $(LIB)
 
-#EXE = shmip8
+$(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
+	@mkdir -p $(BUILDDIR)
+	@echo " $(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
-#all: $(EXE)
+clean:
+	@echo " Cleaning..."; 
+	@echo " $(RM) -r $(BUILDDIR) $(TARGET)"; $(RM) -r $(BUILDDIR) $(TARGET)
 
-#$(EXE): main.o shm_emu_io.o
-#	$(CXX) $< $(LDFLAGS) -o $@
+# Tests
+tester:
+	$(CC) $(CFLAGS) test/tester.cpp $(INC) $(LIB) -o bin/tester
 
-#main.o: main.cpp shm_emu_io.h
-#	$(CXX) $(CXXFLAGS) $< -o $@
+# Spikes
+ticket:
+	$(CC) $(CFLAGS) spikes/ticket.cpp $(INC) $(LIB) -o bin/ticket
 
-#shm_emu_io.o: shm_emu_io.cpp
-#	$(CXX) $(CXXFLAGS) $< -o $@
-
-#clean:
-#	rm *.o && rm $(EXE)
-all: main.cpp shmip8_core.cpp shm_emu_io.cpp
-	python scripts/populateSwitch.py shmip8_core.cpp temp_shmip8_core.cpp
-	g++ main.cpp temp_shmip8_core.cpp shm_emu_io.cpp -std=c++11 -L/usr/local/lib -lSDL2 -Wl,-rpath=/usr/local/lib -o shmip
-
-test: test.cpp shmip8_core.py shm_emu_io.cpp
-	python scripts/populateSwitch.py shmip8_core.cpp temp_shmip8_core.py
-	g++ test.cpp shm_emu_io.cpp -std=c++11 -L/usr/local/lib -lSDL2 -Wl,-rpath=/usr/local/lib -o test
+.PHONY: clean

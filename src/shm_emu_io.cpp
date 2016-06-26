@@ -3,15 +3,18 @@
 #include <iomanip>
 #include <stdlib.h>
 
-using namespace IO;
-
-uint8 initialize() {
+namespace IO {
+void initialize() {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         std::cout << "Failed to initialize video: " << SDL_GetError() << 
                      std::endl;
-        return 1;
+        exit(1);
     }
 }
+
+InputAdapter::InputAdapter() {}
+InputAdapter::~InputAdapter() {}
+void InputAdapter::updateAdapter(SDL_Keycode key, uint8 state) {}
 
 void InputAdapter::getUpdates() {
     SDL_Event test_event;
@@ -76,6 +79,10 @@ Screen::Screen(uint32 width, uint32 height, float scale) {
                             width, height);
 }
 
+Screen::~Screen() {
+    return; // Do nothing I guess?
+}
+
 void Screen::updateScreen(uint32* data) {
     SDL_SetRenderDrawColor(m_ren, 0, 0, 0, 0x00);
     SDL_RenderClear(m_ren);
@@ -107,4 +114,5 @@ void Screen::updateScreen(uint32* data) {
 
     SDL_RenderPresent(m_ren);
 }
-    
+
+}

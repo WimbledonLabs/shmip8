@@ -75,7 +75,7 @@ namespace Chip8 {
 
         // Font data from:
         // http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
-        static constexpr uint8 font[] = {
+        uint8 font[5*16] = {
             0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
             0x20, 0x60, 0x20, 0x20, 0x70, // 1
             0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
