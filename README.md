@@ -1,5 +1,5 @@
 # shmip8
-shmip8 is a basic CHIP-8 emulator written in C++. It is a quick and dirty implementation I created to get my feet wet in emulation. This project should be called a "virtual machine" rather than an "emulator" though, since the CHIP-8 never existed as physical hardware, and only existed as an interpreter. Since the implementation of a CHIP-8 interpreter is similar to that of an emulator, it is commonly called an emulator anyways.
+shmip8 is a basic CHIP-8 emulator written in C++. It is a quick and simple implementation I created to get my feet wet in emulation. This project should be called a "virtual machine" rather than an "emulator" though, since the CHIP-8 never existed as physical hardware, and only existed as an interpreter. Since the implementation of a CHIP-8 interpreter is similar to that of an emulator, it is commonly called an emulator anyways.
 
 ![Image of Chip-8 Tetris](https://github.com/WimbledonLabs/shmip8/raw/master/raw/tetris.png)
 ![Image of Chip-8 Pac-Man](https://github.com/WimbledonLabs/shmip8/raw/master/raw/blinky.png)
