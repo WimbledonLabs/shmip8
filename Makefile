@@ -1,27 +1,39 @@
-#CXX = g++
-#SDL_LIB = -L/usr/local/lib -lSDL2 -Wl,-rpath=/usr/local/lib
-#SDL_INCLUDE = -I/usr/local/include
+CC := g++ # This is the main compiler
+# CC := clang --analyze # and comment out the linker last line for sanity
+SRCDIR := src
+BUILDDIR := build
+TARGET := bin/shmip
+ 
+SRCEXT := cpp
+SOURCES := $(shell find $(SRCDIR) -type f -name "*.$(SRCEXT)")
+OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
+CFLAGS := -g -std=c++11 # -Wall
+LIB := -L lib -lSDL2
+INC := -I include
 
-#CXXFLAGS = -Wall -c -std=c++11 $(SDL_INCLUDE)
-#LDFLAGS = $(SDL_LIB)
+$(TARGET): $(OBJECTS)
+	@echo " Linking..."
+	@echo " $(CC) $^ -o $(TARGET) $(LIB)"; $(CC) $^ -o $(TARGET) $(LIB)
 
-#EXE = shmip8
+$(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
+	@mkdir -p $(BUILDDIR)
+	@echo " $(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
-#all: $(EXE)
+switch:
+	python scripts/generateSwitch.py code > include/opcodeSwitch.cpp
+	python scripts/generateSwitch.py state > include/stateInfoSwitch.cpp
+	python scripts/generateSwitch.py disassemble > include/disassembleSwitch.cpp
 
-#$(EXE): main.o shm_emu_io.o
-#	$(CXX) $< $(LDFLAGS) -o $@
+clean:
+	@echo " Cleaning..."; 
+	@echo " $(RM) -r $(BUILDDIR) $(TARGET)"; $(RM) -r $(BUILDDIR) $(TARGET)
 
-#main.o: main.cpp shm_emu_io.h
-#	$(CXX) $(CXXFLAGS) $< -o $@
+# Tests
+tester:
+	$(CC) $(CFLAGS) test/tester.cpp $(INC) $(LIB) -o bin/tester
 
-#shm_emu_io.o: shm_emu_io.cpp
-#	$(CXX) $(CXXFLAGS) $< -o $@
+# Spikes
+ticket:
+	$(CC) $(CFLAGS) spikes/ticket.cpp $(INC) $(LIB) -o bin/ticket
 
-#clean:
-#	rm *.o && rm $(EXE)
-all: main.cpp shm_emu_io.cpp
-	g++ main.cpp shm_emu_io.cpp -std=c++11 -L/usr/local/lib -lSDL2 -Wl,-rpath=/usr/local/lib -o shmip
-
-test: test.cpp shm_emu_io.cpp
-	g++ test.cpp shm_emu_io.cpp -std=c++11 -L/usr/local/lib -lSDL2 -Wl,-rpath=/usr/local/lib -o test
+.PHONY: clean
