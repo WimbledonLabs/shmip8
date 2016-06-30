@@ -19,6 +19,11 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILDDIR)
 	@echo " $(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
+switch:
+	python scripts/generateSwitch.py code > include/opcodeSwitch.cpp
+	python scripts/generateSwitch.py state > include/stateInfoSwitch.cpp
+	python scripts/generateSwitch.py disassemble > include/disassembleSwitch.cpp
+
 clean:
 	@echo " Cleaning..."; 
 	@echo " $(RM) -r $(BUILDDIR) $(TARGET)"; $(RM) -r $(BUILDDIR) $(TARGET)

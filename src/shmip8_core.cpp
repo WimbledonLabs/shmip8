@@ -45,10 +45,15 @@ void Core::resetState() {
         stack[i] = 0;
     }
 
+    for (int i=0; i<CHIP8_SCREEN_WIDTH*CHIP8_SCREEN_HEIGHT; i++) {
+        pixels[i] = 0xFF000000;
+    }
+
     sp = 0;
     pc = 0x200;
     I = 0;
 
+    timeElapsed = 0;
     dT = 0;
     sT = 0;
 
@@ -71,16 +76,20 @@ void Core::updateInput(HexKeyboardStatus newStatus) {
 }
 
 void Core::timeStep(uint32 step) {
-    if (dT) {
-        dT--;
-    }
+    timeElapsed += step;
+    if (timeElapsed > SIXTY_HZ) {
+        timeElapsed -= SIXTY_HZ;
+        if (dT) {
+            dT--;
+        }
 
-    if (sT) {
-        sT--;
-        if (!sT) {
-            // TODO stop sound
-        } else {
-            // TODO play sound if sound isn't playing
+        if (sT) {
+            sT--;
+            if (!sT) {
+                // TODO stop sound
+            } else {
+                // TODO play sound if sound isn't playing
+            }
         }
     }
 }
@@ -134,10 +143,6 @@ int Core::step() {
             return 1;
         }
 
-        //#if DEBUG_MODE == 2
-            std::cout << std::setw(3) << std::hex << pc - 2 << ": " << 
-                std::hex << opCode.value << std::endl;
-        //#endif
         execute(opCode);
     }
 
@@ -148,6 +153,7 @@ int Core::step() {
 void Core::opDraw(OpCode op) {
     // 0xDXYN
     reg[0xF] = 0;
+
     for (int y = 0; y < op.n; y++) {
         for (int x = 0; x < 8; x++) {
             if ( !((0x80 >> x) & ram[I+y]) ) {
@@ -155,14 +161,14 @@ void Core::opDraw(OpCode op) {
                 continue;
             } else {
                 //Need to draw
-                uint8 xPos = (reg[op.vX] + x) % CHIP8_SCREEN_WIDTH;
-                uint8 yPos = (reg[op.vY] + y) % CHIP8_SCREEN_HEIGHT;
-                if (pixels[x + y*CHIP8_SCREEN_HEIGHT] & 0x00FFFFFF) {
+                uint32 xPos = (reg[op.vX] + x) % CHIP8_SCREEN_WIDTH;
+                uint32 yPos = (reg[op.vY] + y) % CHIP8_SCREEN_HEIGHT;
+                if (pixels[xPos + yPos*CHIP8_SCREEN_WIDTH] & 0x00FFFFFF) {
                     // If we are drawing over a white pixel there is a collision
                     reg[0xF] = 1;
                 }
 
-                pixels[x + y*CHIP8_SCREEN_HEIGHT] ^= 0x00FFFFFF;
+                pixels[xPos + yPos*CHIP8_SCREEN_WIDTH] ^= 0x00FFFFFF;
             }
         }
     }

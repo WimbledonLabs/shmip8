@@ -12,9 +12,11 @@ void initialize() {
     }
 }
 
-InputAdapter::InputAdapter() {}
+//InputAdapter::InputAdapter() {}
 InputAdapter::~InputAdapter() {}
-void InputAdapter::updateAdapter(SDL_Keycode key, uint8 state) {}
+void InputAdapter::updateAdapter(SDL_Keycode key, uint8 state) {
+    std::cout << "WRONG hkeys" << std::endl;
+}
 
 void InputAdapter::getUpdates() {
     SDL_Event test_event;
@@ -38,6 +40,8 @@ void InputAdapter::getUpdates() {
 }
 
 Screen::Screen(uint32 width, uint32 height, float scale) {
+    m_width = width;
+    m_height = height;
     // Create a window to draw in
     m_win = SDL_CreateWindow("Hello World!", SDL_WINDOWPOS_UNDEFINED, 
                            SDL_WINDOWPOS_UNDEFINED, width * scale,
@@ -66,7 +70,7 @@ Screen::Screen(uint32 width, uint32 height, float scale) {
     SDL_RenderClear(m_ren);
 
     // make the scaled rendering look smoother.
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear"); 
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest"); 
 
     // Set the size of the rendered image in pixels, which will be scaled to
     // fit the window
@@ -87,19 +91,24 @@ void Screen::updateScreen(uint32* data) {
     SDL_SetRenderDrawColor(m_ren, 0, 0, 0, 0x00);
     SDL_RenderClear(m_ren);
 
-    int w, h;
-    SDL_QueryTexture(m_tex, NULL, NULL, &w, &h);
+    int w = m_width;
+    int h = m_height;
     /* TODO add support for proper pixel buffer copying
-     * ===================================================
-    int w, h;
+     * =================================================== */
     SDL_QueryTexture(m_tex, NULL, NULL, &w, &h);
 
-    const void *pix = pixels->data;
+    const void *pix = data;
+
     SDL_UpdateTexture(m_tex, NULL, pix, w * sizeof (Uint32));
     SDL_RenderClear(m_ren);
     SDL_RenderCopy(m_ren, m_tex, NULL, NULL);
     SDL_RenderPresent(m_ren);
-     */
+
+/*
+    for (int i=0; i<0x800; i++) {
+        std::cout << ((data[i] & 0xffffff) ? '#' : '-');
+    }
+
 
     for (int y=0; y<h; y++) {
         for (int x=0; x<w; x++) {
@@ -109,10 +118,11 @@ void Screen::updateScreen(uint32* data) {
             int b = p & 0x000000FF;
             SDL_SetRenderDrawColor(m_ren, r, g, b, 0xFF);
             SDL_RenderDrawPoint(m_ren, x, y);
+
         }
     }
 
-    SDL_RenderPresent(m_ren);
+    SDL_RenderPresent(m_ren); */
 }
 
 }

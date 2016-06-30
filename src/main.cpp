@@ -6,6 +6,7 @@
 
 #include "shmip8_core.h"
 #include "shm_emu_io.h"
+#include "input_adapter.h"
 
 #define DEFAULT_WINDOW_SCALE 10
 
@@ -13,84 +14,20 @@ const float SCREEN_FPS = 60.0;
 const float TICKS_PER_SECOND = 1000.0;
 const float TICKS_PER_FRAME = TICKS_PER_SECOND / SCREEN_FPS;
 
-class HexKeyboardAdapter : IO::InputAdapter {
-    private:
-        HexKeyboardStatus status;
-
-        void updateAdapter(SDL_Keycode keyCode, uint8 state) {
-            switch (keyCode) {
-            case SDLK_a:
-                status.k0 = state;
-                break;
-            case SDLK_1:
-                status.k1 = state;
-                break;
-            case SDLK_s:
-                status.k2 = state;
-                break;
-            case SDLK_4:
-                status.k3 = state;
-                break;
-            case SDLK_q:
-                status.k4 = state;
-                break;
-            case SDLK_w:
-                status.k5 = state;
-                break;
-            case SDLK_e:
-                status.k6 = state;
-                break;
-            case SDLK_r:
-                status.k7 = state;
-                break;
-            case SDLK_2:
-                status.k8 = state;
-                break;
-            case SDLK_3:
-                status.k9 = state;
-                break;
-            case SDLK_d:
-                status.kA = state;
-                break;
-            case SDLK_f:
-                status.kB = state;
-                break;
-            case SDLK_z:
-                status.kC = state;
-                break;
-            case SDLK_x:
-                status.kD = state;
-                break;
-            case SDLK_c:
-                status.kE = state;
-                break;
-            case SDLK_v:
-                status.kF = state;
-                break;
-            default:
-                break;
-            }
-        }
-
-    public:
-        HexKeyboardAdapter() {}
-        ~HexKeyboardAdapter() {}
-        HexKeyboardStatus getStatus() {
-            getUpdates();
-            return status;
-        }
-
-};
+void printInstruction(OpCode op);
+void printStateInfo(Chip8::Core *core, OpCode op);
 
 int main(int argc, char** argv) {
+    uint32 timeSinceLastUpdate = SDL_GetTicks();
+    double tickCounter = 0;
+
+    Chip8::Core core;
+    HexKeyboardAdapter keyboardAdapter;
+
     if (argc <= 1) {
         std::cout << "Must specify path to ROM" << std::endl;
         exit(1);
     }
-
-    Chip8::Core core;
-
-    HexKeyboardAdapter keyboardAdapter;
 
     IO::initialize();
     IO::Screen display(core.displayWidth,
@@ -105,13 +42,6 @@ int main(int argc, char** argv) {
     }
 
     core.loadROM(&romFile);
-
-    /*for (int i=0x200; i<0x200+256; i+=2) {
-        std::cout << std::hex << i << ": "<< std::setw(2) << std::hex << (int) core.ram[i] << std::setw(2) << std::hex << (int) core.ram[i+1] << std::endl;
-    }*/
-
-    uint32 timeSinceLastUpdate = SDL_GetTicks();
-    double tickCounter = 0;
 
     while (1) {
         // TODO don't update time when window isn't focused
@@ -132,15 +62,31 @@ int main(int argc, char** argv) {
         }
 
         core.updateInput(keyboardAdapter.getStatus());
-        
+
+        #if DEBUG_MODE >= 1
+            OpCode inOp;
+            inOp.value = core.fetch();
+            std::cout << std::hex << ((int) core.pc) << ": ";
+            printInstruction(inOp);
+            std::cout << std::endl;
+        #endif
+
+        #if DEBUG_MODE >= 2
+            printStateInfo(&core, inOp);
+            std::cout << std::endl;
+        #endif
+
         core.step();
+
+        #if DEBUG_MODE >= 2
+            printStateInfo(&core, inOp);
+            std::cout << std::endl;
+        #endif
 
     }
 
     return 0;
 }
-
-
 
 void printStatus(Chip8::Core *core) {
     std::cout << "Current Instruction: 0x" << std::hex << (core->opCode.value) << std::endl;
@@ -178,6 +124,22 @@ void printKeyboard(Chip8::Core *core) {
     std::cout<< x << std::endl;
 }
 
-void printOp(Chip8::Core *core, OpCode op) {
-    std::cout << std::setw(4) << std::hex << core->pc << ": " << std::setw(4) << std::hex << op.value << std::endl;
+void printInstruction(OpCode op) {
+    #include "disassembleSwitch.cpp"
+}
+
+int BCD(Chip8::Core *core, OpCode op) {
+    return 0;
+}
+
+int ramUpToVX(Chip8::Core *core, OpCode op) {
+    return 0;
+}
+
+int regUpToVX(Chip8::Core *core, OpCode op) {
+    return 0;
+}
+
+void printStateInfo(Chip8::Core *core, OpCode op) {
+    #include "stateInfoSwitch.cpp"
 }

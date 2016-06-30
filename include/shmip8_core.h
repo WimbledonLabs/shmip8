@@ -15,6 +15,8 @@
 #define FONT_OFFSET 0
 #define FONT_HEIGHT 5
 
+#define SIXTY_HZ 16.6667
+
 typedef union{
     uint16 value;
     struct {
@@ -67,6 +69,7 @@ namespace Chip8 {
         uint16 pc;
         uint16 I;
 
+        float timeElapsed;
         uint8 dT;
         uint8 sT;
 
@@ -104,6 +107,9 @@ namespace Chip8 {
 
         int step();
         void execute(OpCode);
+        void printInstruction(OpCode op);
+
+        uint16 fetch();
 
         void updateInput(HexKeyboardStatus newStatus);
         void timeStep(uint32);
@@ -117,8 +123,6 @@ namespace Chip8 {
 
         uint8 waitingForInput;
         uint8 waitingInputReg;
-
-        uint16 fetch();
 
         // Initialization helpers
         void resetState();

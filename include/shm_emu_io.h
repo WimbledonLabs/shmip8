@@ -9,9 +9,8 @@ namespace IO {
  
     class InputAdapter {
     public:
-        InputAdapter();
-        ~InputAdapter();
-        void updateAdapter(SDL_Keycode, uint8);
+        virtual ~InputAdapter();
+        virtual void updateAdapter(SDL_Keycode, uint8);
         void getUpdates(void);
     };
 
@@ -21,6 +20,8 @@ namespace IO {
         ~Screen();
         void updateScreen(uint32* data);
     private:
+        int m_width;
+        int m_height;
         SDL_Window *m_win = nullptr;
         SDL_Renderer *m_ren = nullptr;
         SDL_Texture *m_tex = nullptr;
