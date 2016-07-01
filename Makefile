@@ -1,9 +1,10 @@
-CC := g++ # This is the main compiler
-# CC := clang --analyze # and comment out the linker last line for sanity
+.RECIPEPREFIX != ps
+
+CXX := g++ # This is the main compiler
 SRCDIR := src
 BUILDDIR := build
 TARGET := bin/shmip
- 
+
 SRCEXT := cpp
 SOURCES := $(shell find $(SRCDIR) -type f -name "*.$(SRCEXT)")
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
@@ -12,28 +13,24 @@ LIB := -L lib -lSDL2
 INC := -I include
 
 $(TARGET): $(OBJECTS)
-	@echo " Linking..."
-	@echo " $(CC) $^ -o $(TARGET) $(LIB)"; $(CC) $^ -o $(TARGET) $(LIB)
+    @echo " Linking..."
+    @echo " $(CXX) $^ -o $(TARGET) $(LIB)"; $(CXX) $^ -o $(TARGET) $(LIB)
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
-	@mkdir -p $(BUILDDIR)
-	@echo " $(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
+    @mkdir -p $(BUILDDIR)
+    @echo " $(CXX) $(CFLAGS) $(INC) -c -o $@ $<"; $(CXX) $(CFLAGS) $(INC) -c -o $@ $<
 
-switch:
-	python scripts/generateSwitch.py code > include/opcodeSwitch.cpp
-	python scripts/generateSwitch.py state > include/stateInfoSwitch.cpp
-	python scripts/generateSwitch.py disassemble > include/disassembleSwitch.cpp
+switch: scripts/generateSwitch.py
+    python scripts/generateSwitch.py code > include/opcodeSwitch.cpp
+    python scripts/generateSwitch.py state > include/stateInfoSwitch.cpp
+    python scripts/generateSwitch.py disassemble > include/disassembleSwitch.cpp
 
 clean:
-	@echo " Cleaning..."; 
-	@echo " $(RM) -r $(BUILDDIR) $(TARGET)"; $(RM) -r $(BUILDDIR) $(TARGET)
+    @echo " Cleaning..."
+    @echo " $(RM) -r $(BUILDDIR) $(TARGET)"; $(RM) -r $(BUILDDIR) $(TARGET)
 
 # Tests
 tester:
-	$(CC) $(CFLAGS) test/tester.cpp $(INC) $(LIB) -o bin/tester
-
-# Spikes
-ticket:
-	$(CC) $(CFLAGS) spikes/ticket.cpp $(INC) $(LIB) -o bin/ticket
+    $(CC) $(CFLAGS) test/tester.cpp $(INC) $(LIB) -o bin/tester
 
 .PHONY: clean
